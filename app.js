@@ -1,97 +1,60 @@
-const getLocation = () => {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-        alert('Geolocation is not supported by this browser.');
+// const latlng = document.getElementById("location");
+
+const getCurrentLatLng = () => {
+
+    if (!navigator.geolocation) {
+        document.getElementById('latitude').innerHTML = "<p>Geolocation is not supported by your browser</p>";
     }
-};
 
-const showPosition = (position) => {
+    const success = (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-    const lat = position.coords.latitude;
-    const long = position.coords.longitude;
+        document.getElementById('latitude').innerHTML = `Latitude: ${lat}°`
+        document.getElementById('longitude').innerHTML = `Longitude: ${lng}°`;
 
-    console.log(lat, long);
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}`;
+        getLocationText(lat, lng);
+    }
 
-    fetch(url)
-        .then((resp) => resp.json())
-        .then((data) => {
-            const city = data.results[0].address_components[2].short_name;
-            const country = data.results[0].address_components[5].long_name;
+    const error = () => {
+        document.getElementById('latitude').innerHTML = '<p>Unable to retrieve your location</p>';
+    }
 
-            document.getElementById('location').innerHTML = `Location: ${city}, ${country}`;
-            console.log(`Location: ${city}, ${country}`);
-        })
-        .catch((e) => {
-            console.log('Error:', e);
-            getLocation();
-        });
-};
+    document.getElementById('latitude').innerHTML = '<p>Locating...</p>';
 
-const getWeather = (lat, long) => {
+    navigator.geolocation.getCurrentPosition(success, error);
+}
 
-    const apiKey = 'b8dd631acbadd85a95decbd1abeee667';
-    const url = `https://api.darksky.net/forecast/${apiKey}/${lat},${long}?exclude=minutely,hourly,alerts,flags&units=uk2`;
-    // const options = {
-    //     headers: {
-    //         "Accept-Encoding": "gzip"
-    //     },
-    //     dataType: "jsonp",
-    //     url: url
-    // };
+const getLocationText = (lat, lng) => {
+    const latlng = new google.maps.LatLng(lat, lng);
 
-    // $.ajax({
-    //         headers: {
-    //             "Accept-Encoding": "gzip"
-    //         },
-    //         dataType: "jsonp",
-    //         url: url,
-    //         success: function(data, status, xhr) {
-    //             console.log(data);
-    //         }
-    //     });
+    new google.maps.Geocoder().geocode({'latLng' : latlng}, (results, status) => {
+        if (status == google.maps.GeocoderStatus.OK) {
 
-    // fetch(url, options)
-    //     .then((resp) => resp.json())
-    //     .then((data) => {
-    //         console.log(data);
-    //     });
+          const city = results[1].address_components[2].long_name;
+          const country = results[1].address_components[5].long_name;
 
-    //     var request = new Request('https://davidwalsh.name/some-url', {
-//     headers: new Headers({
-//         'Content-Type': 'text/plain'
-//     })
-// });
+          document.getElementById('city').innerHTML = `City: ${city}`;
+          document.getElementById('country').innerHTML = `Country: ${country}`;
+        }
+    });
+}
 
-// fetch(request).then(function() { /* handle response */ });
+const getLocationLatLng = () => {
+    const address = 'St Andrews, uk';
 
-    const request = new Request(url, {
-        headers : new Headers({
-            'Accept-Encoding': 'gzip'
-        }),
-        dataType: 'jsonp'
+    new google.maps.Geocoder().geocode({address: address}, (results, status) => {
+        if (status == google.maps.GeocoderStatus.OK) {
+            console.log(results[0].geometry.location);
+        }
     });
 
-    fetch(request)
-        .then((resp) => resp.json())
-        .then((data) => {
-            console.log(data);
-        })
-        .catch((e) => {
-            console.log('Error:', e);
-        });
-
-
 
 };
 
-$(document).ready(function() {
+//getCurrentLatLng();
 
-    getLocation();
-    getWeather(56.337719199999995, -2.7939183);
+getLocationLatLng();
 
-});
-
-// For fetch() see: https://jsfiddle.net/bseqsz94/
-// For CORS errors see: https://darksky.net/dev/docs/faq
+// https://jsfiddle.net/orf71jvL/25/
+// https://jsfiddle.net/moj3bbrs/12/ - use this one!
