@@ -1,60 +1,78 @@
-// const latlng = document.getElementById("location");
+const url = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+const url2 = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=';
+const key = '&key=AIzaSyDHcVGI8CyLBANatV-Y3ESj2Zk8i3Ac6lQ';
 
-const getCurrentLatLng = () => {
+const getLatLng = (address) => {
+    fetch(url + address + key)
+    .then((resp) => resp.json())
+  .then((data) => {
+    const lat = data.results[0].geometry.location.lat;
+    const lng = data.results[0].geometry.location.lng;
 
-    if (!navigator.geolocation) {
-        document.getElementById('latitude').innerHTML = "<p>Geolocation is not supported by your browser</p>";
-    }
+    document.getElementById('latitude').innerHTML = `Latitude: ${lat}`;
+    document.getElementById('longitude').innerHTML = `Longitude: ${lng}`;
 
-    const success = (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        document.getElementById('latitude').innerHTML = `Latitude: ${lat}°`
-        document.getElementById('longitude').innerHTML = `Longitude: ${lng}°`;
-
-        getLocationText(lat, lng);
-    }
-
-    const error = () => {
-        document.getElementById('latitude').innerHTML = '<p>Unable to retrieve your location</p>';
-    }
-
-    document.getElementById('latitude').innerHTML = '<p>Locating...</p>';
-
-    navigator.geolocation.getCurrentPosition(success, error);
+    getCity(`${lat}, ${lng}`);
+  });
 }
 
-const getLocationText = (lat, lng) => {
-    const latlng = new google.maps.LatLng(lat, lng);
+const getCity = (latlng) => {
+    console.log(latlng);
+    fetch(url2 + latlng + key) //+ '&result_type=locality'
+    .then((resp) => resp.json())
+    .then((data) => {
 
-    new google.maps.Geocoder().geocode({'latLng' : latlng}, (results, status) => {
-        if (status == google.maps.GeocoderStatus.OK) {
+        console.log(data);
 
-          const city = results[1].address_components[2].long_name;
-          const country = results[1].address_components[5].long_name;
+        let city = undefined;
+        let country = undefined
 
-          document.getElementById('city').innerHTML = `City: ${city}`;
-          document.getElementById('country').innerHTML = `Country: ${country}`;
-        }
+        data.results.forEach((result) => {
+            if (!city && result.types[0] === 'locality') {
+                result.address_components.forEach((component) => {
+                    if (component.types[0] === 'locality') {
+                        city = component.long_name;
+                    }
+                })
+            }
+
+            if (!country && result.types[0] === 'country') {
+                country = result.formatted_address;
+            }
+        })
+
+        // const city = data.results[0].address_components[2].long_name;
+        // const country = data.results[0].address_components[5].long_name;
+
+        document.getElementById('city').innerHTML = `City: ${city}`;
+        document.getElementById('country').innerHTML = `Country: ${country}`;
     });
 }
 
-const getLocationLatLng = () => {
-    const address = 'St Andrews, uk';
+//getLatLng();
 
-    new google.maps.Geocoder().geocode({address: address}, (results, status) => {
-        if (status == google.maps.GeocoderStatus.OK) {
-            console.log(results[0].geometry.location);
-        }
-    });
-
-
+document.getElementById('text-search').onclick = () => {
+    let address = document.getElementById('search-input').value;
+    address = address.split(' ').join('+');
+    if (address.length > 0) {
+        getLatLng(address)
+    } else {
+        alert('Please enter an address');
+    }
 };
 
-//getCurrentLatLng();
+document.getElementById('current-search').onclick = () => {
+    if (!navigator.geolocation) {
+        document.getElementById('latitude').innerHTML = "<p>Geolocation is not supported by your browser</p>";
+    } else {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude.toFixed(6);
+            const lng = position.coords.longitude.toFixed(6);
 
-getLocationLatLng();
+            document.getElementById('latitude').innerHTML = `Latitude: ${lat}`;
+            document.getElementById('longitude').innerHTML = `Longitude: ${lng}`;
 
-// https://jsfiddle.net/orf71jvL/25/
-// https://jsfiddle.net/moj3bbrs/12/ - use this one!
+            getCity(`${lat}, ${lng}`);
+        });
+    }
+};
