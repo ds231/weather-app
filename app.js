@@ -17,12 +17,9 @@ const getLatLng = (address) => {
 }
 
 const getCity = (latlng) => {
-    console.log(latlng);
-    fetch(url2 + latlng + key) //+ '&result_type=locality'
+    fetch(url2 + latlng + key)
     .then((resp) => resp.json())
     .then((data) => {
-
-        console.log(data);
 
         let city = undefined;
         let country = undefined
@@ -32,24 +29,18 @@ const getCity = (latlng) => {
                 result.address_components.forEach((component) => {
                     if (component.types[0] === 'locality') {
                         city = component.long_name;
+                        city = (city === 'Saint Andrews') ? 'St Andrews' : city;
                     }
                 })
+                country = result.formatted_address.split(', ');
+                country = country[country.length-1];
             }
-
-            if (!country && result.types[0] === 'country') {
-                country = result.formatted_address;
-            }
-        })
-
-        // const city = data.results[0].address_components[2].long_name;
-        // const country = data.results[0].address_components[5].long_name;
+        });
 
         document.getElementById('city').innerHTML = `City: ${city}`;
         document.getElementById('country').innerHTML = `Country: ${country}`;
     });
 }
-
-//getLatLng();
 
 document.getElementById('text-search').onclick = () => {
     let address = document.getElementById('search-input').value;
