@@ -37,6 +37,9 @@ const getCity = (latlng) => {
             }
         });
 
+        city = (!city) ? 'Sorry, couldn\'t find that location' : city;
+        country = (!country) ? 'Sorry, couldn\'t find that location' : country;
+
         document.getElementById('city').innerHTML = `City: ${city}`;
         document.getElementById('country').innerHTML = `Country: ${country}`;
     });
