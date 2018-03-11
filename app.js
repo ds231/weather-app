@@ -42,8 +42,56 @@ const getCity = (latlng) => {
 
         document.getElementById('city').innerHTML = `City: ${city}`;
         document.getElementById('country').innerHTML = `Country: ${country}`;
+
+        getWeather(latlng);
+
     });
 }
+
+const getWeather = (latlng) => {
+
+    const api_key = 'b8dd631acbadd85a95decbd1abeee667';
+    // const lat = '56.339775';
+    // const lng = '-2.796721';
+    // const weather_url = 'https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/' + api_key + '/' + lat + ',' + lng; // + '?exclude=minutely,hourly,alerts,flags&units=uk2';
+    const weather_url = 'https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/' + api_key + '/' + latlng + '?exclude=minutely,alerts,flags&units=uk2';
+
+    fetch(weather_url)
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+            current = data.currently;
+            current = {
+                day: moment().format('ddd'),
+                temperature: Math.round(current.temperature),
+                icon: current.icon,
+                summary: current.summary,
+                windBearing: current.windBearing,
+                windSpeed: Math.round(current.windSpeed),
+                rainProbability: Math.round(current.precipProbability * 100)
+            };
+            console.log(current);
+
+            let count = 0;
+            daily = data.daily.data.slice(0, 4);
+            daily = daily.map((day) => {
+                count++;
+                return {
+                    day: moment().add(count, 'days').format('ddd'),
+                    temperature: Math.round((day.temperatureHigh + day.temperatureLow) / 2),
+                    icon: day.icon,
+                    summary: day.summary,
+                    windBearing: day.windBearing,
+                    windSpeed: Math.round(day.windSpeed),
+                    rainProbability: Math.round(day.precipProbability * 100)
+                };
+            });
+            daily.unshift(current);
+            console.log(daily);
+        });
+};
+
+// getWeather();
 
 document.getElementById('text-search').onclick = () => {
     let address = document.getElementById('search-input').value;
